@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="ru" class="scroll-smooth">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEONPULSE — Информационный хаб для мужчин</title>
+<meta name="description" content="NEONPULSE — высокотехнологичный агрегатор новостей: ИИ, Политика, Авто, Технологии, Стиль и Гейминг.">
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        void: '#0a0a0a',
+        panel: '#151515',
+        neon: '#39FF14',
+        muted: '#A0A0A0',
+      },
+      fontFamily: {
+        grotesk: ['"Space Grotesk"', 'sans-serif'],
+        mono: ['"JetBrains Mono"', 'monospace'],
+      },
+    }
+  }
+}
+</script>
+<style>
+html { background:#0a0a0a; }
+body { background:#0a0a0a; color:#fff; font-family:'Space Grotesk',sans-serif; overflow-x:hidden; }
+::selection { background:#39FF14; color:#0a0a0a; }
+::-webkit-scrollbar { width:8px; }
+::-webkit-scrollbar-track { background:#0a0a0a; }
+::-webkit-scrollbar-thumb { background:#222; border-radius:4px; }
+::-webkit-scrollbar-thumb:hover { background:#39FF14; }
+
+/* Neon utilities */
+.neon-text { color:#39FF14; text-shadow:0 0 8px rgba(57,255,20,.65), 0 0 24px rgba(57,255,20,.35); }
+.glass { background:rgba(21,21,21,.75); backdrop-filter:blur(12px); border:1px solid rgba(255,255,255,.06); }
+.neon-border { border:1px solid rgba(57,255,20,.35); }
+.neon-glow { box-shadow:0 0 12px rgba(57,255,20,.35), inset 0 0 12px rgba(57,255,20,.08); }
+.neon-glow-lg { box-shadow:0 0 24px rgba(57,255,20,.45), 0 0 64px rgba(57,255,20,.15); }
+.btn-neon { background:#39FF14; color:#0a0a0a; transition:.25s; }
+.btn-neon:hover { box-shadow:0 0 24px rgba(57,255,20,.7), 0 0 56px rgba(57,255,20,.3); transform:translateY(-2px); }
+.btn-outline { border:1px solid rgba(255,255,255,.25); color:#fff; transition:.25s; }
+.btn-outline:hover { border-color:#39FF14; color:#39FF14; box-shadow:0 0 16px rgba(57,255,20,.25); transform:translateY(-2px); }
+
+/* Card lift */
+.card-lift { transition:transform .3s cubic-bezier(.2,.8,.2,1), box-shadow .3s, border-color .3s; }
+.card-lift:hover { transform:translateY(-6px); border-color:rgba(57,255,20,.4); box-shadow:0 12px 40px rgba(0,0,0,.6), 0 0 24px rgba(57,255,20,.12); }
+.card-lift:hover .card-arrow { color:#39FF14; transform:translateX(4px); }
+.card-arrow { transition:.25s; color:#555; }
+
+/* Pulsing dot */
+@keyframes pulse-dot {
+  0% { box-shadow:0 0 0 0 rgba(57,255,20,.6); }
+  70% { box-shadow:0 0 0 10px rgba(57,255,20,0); }
+  100% { box-shadow:0 0 0 0 rgba(57,255,20,0); }
+}
+.pulse-dot { animation:pulse-dot 2s infinite; }
+
+/* Fade-in on load */
+.fade-item { opacity:0; transform:translateY(24px); transition:opacity .7s ease, transform .7s cubic-bezier(.2,.8,.2,1); }
+.fade-item.visible { opacity:1; transform:translateY(0); }
+
+/* Scanline / background grid */
+.bg-grid {
+  background-image:
+    linear-gradient(rgba(57,255,20,.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(57,255,20,.04) 1px, transparent 1px);
+  background-size:48px 48px;
+}
+.hero-radial {
+  background:radial-gradient(ellipse 60% 50% at 50% 0%, rgba(57,255,20,.08) 0%, transparent 60%);
+}
+
+/* Nav active */
+.nav-link { position:relative; transition:.2s; }
+.nav-link:hover { color:#39FF14; text-shadow:0 0 8px rgba(57,255,20,.5); }
+.nav-link.active { color:#39FF14; }
+.nav-link.active::after {
+  content:''; position:absolute; left:0; right:0; bottom:-6px; height:2px;
+  background:#39FF14; box-shadow:0 0 8px rgba(57,255,20,.8); border-radius:2px;
+}
+
+/* Category filter */
+.filter-item { transition:.2s; cursor:pointer; }
+.filter-item:hover { color:#39FF14; }
+.filter-item.active { color:#39FF14; text-shadow:0 0 8px rgba(57,255,20,.4); }
+
+/* Marquee ticker */
+@keyframes ticker { 0% { transform:translateX(0); } 100% { transform:translateX(-50%); } }
+.ticker-track { animation:ticker 30s linear infinite; }
+.ticker-track:hover { animation-play-state:paused; }
+</style>
+</head>
+<body class="antialiased">
+
+<!-- ===== NEWS TICKER ===== -->
+<div class="border-b border-white/5 bg-panel/60 overflow-hidden">
+  <div class="flex items-center">
+    <div class="shrink-0 px-4 py-2 bg-neon text-void font-mono text-[11px] font-bold tracking-widest flex items-center gap-2">
+      <span class="w-2 h-2 bg-void rounded-full pulse-dot"></span> LIVE
+    </div>
+    <div class="overflow-hidden flex-1">
+      <div class="ticker-track flex whitespace-nowrap py-2 font-mono text-xs text-muted" id="ticker"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== HEADER ===== -->
+<header class="sticky top-0 z-50 glass border-b border-white/5">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      <!-- Logo -->
+      <a href="#" class="flex items-center gap-2 group">
+        <span class="w-8 h-8 rounded neon-border neon-glow bg-neon/10 flex items-center justify-center font-mono font-bold text-neon text-sm group-hover:bg-neon group-hover:text-void transition-all duration-300">N</span>
+        <span class="text-xl font-bold tracking-widest neon-text">NEONPULSE</span>
+      </a>
+      <!-- Desktop nav -->
+      <nav class="hidden md:flex items-center gap-7 font-mono text-xs uppercase tracking-wider text-muted" id="navLinks">
+        <a href="#" class="nav-link active" data-cat="Все">Главная</a>
+        <a href="#" class="nav-link" data-cat="ИИ">ИИ</a>
+        <a href="#" class="nav-link" data-cat="Политика">Политика</a>
+        <a href="#" class="nav-link" data-cat="Авто">Авто</a>
+        <a href="#" class="nav-link" data-cat="Технологии">Технологии</a>
+        <a href="#" class="nav-link" data-cat="Стиль">Стиль</a>
+        <a href="#" class="nav-link" data-cat="Гейминг">Гейминг</a>
+      </nav>
+      <!-- Mobile burger -->
+      <button id="burger" class="md:hidden w-10 h-10 flex flex-col items-center justify-center gap-1.5" aria-label="Меню">
+        <span class="w-6 h-0.5 bg-neon transition-all"></span>
+        <span class="w-6 h-0.5 bg-white transition-all"></span>
+        <span class="w-6 h-0.5 bg-white/50 transition-all"></span>
+      </button>
+    </div>
+  </div>
+  <!-- Mobile nav -->
+  <div id="mobileNav" class="hidden md:hidden glass border-t border-white/5">
+    <nav class="px-6 py-4 flex flex-col gap-3 font-mono text-sm uppercase tracking-wider text-muted">
+      <a href="#" class="nav-link active" data-cat="Все">Главная</a>
+      <a href="#" class="nav-link" data-cat="ИИ">ИИ</a>
+      <a href="#" class="nav-link" data-cat="Политика">Политика</a>
+      <a href="#" class="nav-link" data-cat="Авто">Авто</a>
+      <a href="#" class="nav-link" data-cat="Технологии">Технологии</a>
+      <a href="#" class="nav-link" data-cat="Стиль">Стиль</a>
+      <a href="#" class="nav-link" data-cat="Гейминг">Гейминг</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ===== HERO ===== -->
+<section class="relative bg-grid hero-radial fade-item">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-14 pb-16 lg:pt-20 lg:pb-24">
+    <div class="max-w-4xl">
+      <!-- Trending badge -->
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full font-mono text-xs tracking-widest uppercase neon-border neon-glow bg-neon/5 text-neon mb-8">
+        <span class="w-2 h-2 rounded-full bg-neon pulse-dot"></span>
+        Тренды сейчас
+        <span class="text-muted">/ #077</span>
+      </div>
+      <!-- Headline -->
+      <h1 class="text-4xl sm:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight">
+        ИИ научился <span class="neon-text">проектировать</span><br class="hidden sm:block">
+        чипы быстрее мировых <span class="neon-text">корпораций</span>
+      </h1>
+      <!-- Summary -->
+      <p class="mt-6 text-muted text-base sm:text-lg max-w-2xl leading-relaxed">
+        Новая архитектура генеративного проектирования сократила цикл разработки топологических чипов с 18 месяцев до 11 дней. Разбираем, что это означает для полупроводниковой индустрии, геополитики и вашего будущего гаджета.
+      </p>
+      <!-- Buttons -->
+      <div class="mt-9 flex flex-col sm:flex-row gap-4">
+        <a href="#dispatches" class="btn-neon inline-flex items-center justify-center gap-2 px-8 py-4 rounded-lg font-bold text-sm tracking-wide">
+          Читать статью
+          <span aria-hidden="true">→</span>
+        </a>
+        <a href="#" class="btn-outline inline-flex items-center justify-center gap-2 px-8 py-4 rounded-lg font-bold text-sm tracking-wide">
+          <span class="w-0 h-0 border-y-[6px] border-y-transparent border-l-[10px] border-l-current" aria-hidden="true"></span>
+          Смотреть брифинг
+        </a>
+      </div>
+      <!-- Meta -->
+      <div class="mt-10 flex flex-wrap items-center gap-x-6 gap-y-2 font-mono text-xs text-muted">
+        <span>Категория: <span class="text-neon">ИИ</span></span>
+        <span>Oct 26, 2026</span>
+        <span>Время чтения: 7 мин</span>
+        <span>ID: #NPS-077</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== MAIN CONTENT ===== -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-24">
+  <div class="grid grid-cols-1 lg:grid-cols-[1fr_320px] gap-12 lg:gap-16">
+
+    <!-- Content grid -->
+    <section id="dispatches">
+      <div class="flex items-end justify-between mb-8 fade-item">
+        <div>
+          <div class="font-mono text-xs text-neon tracking-widest uppercase mb-2">// Лента</div>
+          <h2 class="text-3xl font-bold tracking-tight">Последние данные</h2>
+        </div>
+        <div class="font-mono text-xs text-muted hidden sm:block" id="gridCount"></div>
+      </div>
+
+      <div id="newsGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-6"></div>
+
+      <div id="emptyState" class="hidden text-center py-16 text-muted font-mono text-sm">
+        [ NO RECORDS FOUND ] — Нет записей в данной категории
+      </div>
+    </section>
+
+    <!-- Sidebar -->
+    <aside class="space-y-8">
+
+      <!-- Filter -->
+      <div class="glass rounded-xl p-6 fade-item">
+        <div class="font-mono text-xs text-neon tracking-widest uppercase mb-5">// Фильтр по категориям</div>
+        <ul class="space-y-1 font-mono text-sm" id="filterList"></ul>
+      </div>
+
+      <!-- Newsletter -->
+      <div class="glass rounded-xl p-6 neon-border fade-item relative overflow-hidden">
+        <div class="absolute -top-16 -right-16 w-40 h-40 rounded-full bg-neon/10 blur-3xl pointer-events-none"></div>
+        <div class="font-mono text-xs text-neon tracking-widest uppercase mb-3">// Newsletter</div>
+        <h3 class="text-xl font-bold mb-2">Прямой канал данных</h3>
+        <p class="text-muted text-sm leading-relaxed mb-5">Ежедневный дайджест главного. Без шума, без рекламы — только сигналы.</p>
+        <form id="newsletterForm" class="space-y-3">
+          <input type="email" id="emailInput" required placeholder="your@email.com"
+            class="w-full bg-void border border-white/10 rounded-lg px-4 py-3 font-mono text-sm text-white placeholder-gray-600 focus:outline-none focus:border-neon focus:shadow-[0_0_12px_rgba(57,255,20,.25)] transition-all">
+          <button type="submit" class="btn-neon w-full py-3 rounded-lg font-bold text-sm tracking-widest uppercase font-mono">Подписаться</button>
+          <div id="newsletterMsg" class="hidden font-mono text-xs text-neon text-center pt-1"></div>
+        </form>
+      </div>
+
+      <!-- Status -->
+      <div class="glass rounded-xl p-6 fade-item">
+        <div class="font-mono text-xs text-neon tracking-widest uppercase mb-4">// Статус системы</div>
+        <div class="flex items-center gap-3">
+          <span class="w-3 h-3 rounded-full bg-neon pulse-dot shrink-0"></span>
+          <span class="text-sm">Все системы работают</span>
+        </div>
+        <div class="mt-4 grid grid-cols-3 gap-2 font-mono text-[10px] text-muted">
+          <div class="bg-void/60 rounded px-2 py-1.5 text-center">
+            <div class="text-neon text-xs">99.98%</div>АПТАЙМ
+          </div>
+          <div class="bg-void/60 rounded px-2 py-1.5 text-center">
+            <div class="text-neon text-xs">12ms</div>ПИНГ
+          </div>
+          <div class="bg-void/60 rounded px-2 py-1.5 text-center">
+            <div class="text-neon text-xs">24/7</div>ПОТОК
+          </div>
+        </div>
+      </div>
+
+    </aside>
+  </div>
+</main>
+
+<!-- ===== FOOTER ===== -->
+<footer class="border-t border-white/5 bg-panel/40">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-2">
+        <span class="w-7 h-7 rounded neon-border bg-neon/10 flex items-center justify-center font-mono font-bold text-neon text-xs">N</span>
+        <span class="font-bold tracking-widest neon-text">NEONPULSE</span>
+      </div>
+      <p class="font-mono text-xs text-muted text-center">
+        Powered by AI and The Engineer <span class="text-white">Vadim Tairov</span>
+      </p>
+      <div class="font-mono text-[10px] text-gray-600 text-center md:text-right">
+        © 2026 NEONPULSE // SYS.VERSION 2.4.1<br>
+        <span class="text-muted">Все записи заархивированы</span>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ===== DATA ===== */
+const ARTICLES = [
+  {
+    id: '081',
+    category: 'ИИ',
+    date: 'Oct 24, 2026',
+    title: 'GPT-класс иначе: открытые модели догоняют закрытые за 4 месяца',
+    excerpt: 'Исследование показало, что разрыв между open-source и проприетарными моделями сжался до минимальной отметки за всю историю наблюдений.',
+    readingTime: '5 мин'
+  },
+  {
+    id: '080',
+    category: 'Политика',
+    date: 'Oct 24, 2026',
+    title: 'Цифровой суверенитет: новая карта регуляции данных',
+    excerpt: 'Государства формируют блоки контроля данных, и расстояние между юрисдикциями становится новым геополитическим фактором.',
+    readingTime: '6 мин'
+  },
+  {
+    id: '079',
+    category: 'Авто',
+    date: 'Oct 23, 2026',
+    title: 'Сплошной электропривод: батарея нового типа проехала 1200 км',
+    excerpt: 'Прототип твердотельного аккумулятора прошёл зимние испытания. Серийное производство обещают к 2027 году.',
+    readingTime: '4 мин'
+  },
+  {
+    id: '078',
+    category: 'Технологии',
+    date: 'Oct 23, 2026',
+    title: 'Квантовое превосходство-2: эра посткриптографии начинается',
+    excerpt: 'Крупнейшие банкинги мира начали миграцию на постквантовые алгоритмы шифрования. Что стоит знать о Q-Day.',
+    readingTime: '8 мин'
+  },
+  {
+    id: '077',
+    category: 'ИИ',
+    date: 'Oct 26, 2026',
+    title: 'ИИ научился проектировать чипы быстрее мировых корпораций',
+    excerpt: 'Генеративное проектирование сократило цикл разработки топологических чипов с 18 месяцев до 11 дней.',
+    readingTime: '7 мин'
+  },
+  {
+    id: '076',
+    category: 'Гейминг',
+    date: 'Oct 22, 2026',
+    title: 'Киберспорт выходит на прайм-тайм: пик вещания сравнялся с футболом',
+    excerpt: 'Финал мирового первенства собрал аудиторию в 88 млн зрителей одновременно по всем платформам.',
+    readingTime: '3 мин'
+  },
+  {
+    id: '075',
+    category: 'Стиль',
+    date: 'Oct 21, 2026',
+    title: 'Технокутюр: носимая электроника становится невидимой',
+    excerpt: 'Электролюминесцентные ткани и разогревающие мембраны добрались до подиумов Милана и Токио.',
+    readingTime: '4 мин'
+  },
+  {
+    id: '074',
+    category: 'Авто',
+    date: 'Oct 21, 2026',
+    title: 'Автопилот уровня 4 впервые разрешён на магистралях ЕС',
+    excerpt: 'Одобрение получено для ночного движения по выделенным полосам. Разбираем регуляторную базу.',
+    readingTime: '5 мин'
+  },
+  {
+    id: '073',
+    category: 'Политика',
+    date: 'Oct 20, 2026',
+    title: 'ИИ-дипломатия: модели-посредники на переговорах',
+    excerpt: 'Экспериментальный протокол использует нейросеть как нейтрального переводчика в чувствительных переговорах.',
+    readingTime: '6 мин'
+  },
+  {
+    id: '072',
+    category: 'Гейминг',
+    date: 'Oct 19, 2026',
+    title: 'Нейроинтерфейс в играх: управление мыслью вышло из беты',
+    excerpt: 'Коммерческий контроллер ЭЭГ открыл продажи в трёх странах. Первые отзывы — неожиданные.',
+    readingTime: '5 мин'
+  },
+  {
+    id: '071',
+    category: 'Стиль',
+    date: 'Oct 18, 2026',
+    title: 'Минимализм 2.0: гардероб из 7 предметов на весь год',
+    excerpt: 'Модульная одежда с защитой от погодных условий завоевывает профессиональную аудиторию.',
+    readingTime: '3 мин'
+  },
+  {
+    id: '070',
+    category: 'Технологии',
+    date: 'Oct 17, 2026',
+    title: 'Роботы-курьеры развернулись в 40 мегаполисах мира',
+    excerpt: 'Ортезированные платформы вышли на улицы после снятия ограничений. Карта развёртывания внутри.',
+    readingTime: '4 мин'
+  }
+];
+
+/* ===== RENDER NEWS GRID ===== */
+const grid = document.getElementById('newsGrid');
+const emptyState = document.getElementById('emptyState');
+const gridCount = document.getElementById('gridCount');
+
+function articleCard(a) {
+  return `
+  <article class="glass card-lift rounded-xl p-6 flex flex-col fade-item">
+    <div class="flex items-center justify-between mb-4">
+      <span class="px-2.5 py-1 rounded neon-border bg-neon/5 text-neon font-mono text-[11px] uppercase tracking-widest neon-glow">${a.category}</span>
+      <time class="font-mono text-[11px] text-muted">${a.date}</time>
+    </div>
+    <h3 class="text-lg font-bold leading-snug mb-3 group-hover:text-neon transition-colors">${a.title}</h3>
+    <p class="text-muted text-sm leading-relaxed flex-grow">${a.excerpt}</p>
+    <div class="mt-5 flex items-center justify-between border-t border-white/5 pt-4">
+      <a href="#" class="card-arrow inline-flex items-center gap-1.5 font-mono text-xs font-bold tracking-wider text-white">Читать далее <span>→</span></a>
+      <span class="font-mono text-[11px] text-gray-600">#${a.id}</span>
+    </div>
+  </article>`;
+}
+
+function renderGrid(filter = 'Все') {
+  const list = filter === 'Все' ? ARTICLES : ARTICLES.filter(a => a.category === filter);
+  grid.innerHTML = list.map(articleCard).join('');
+  emptyState.classList.toggle('hidden', list.length > 0);
+  gridCount.textContent = `[ ${list.length} ЗАПИСЕЙ ]`;
+  grid.querySelectorAll('.fade-item').forEach((el, i) => {
+    setTimeout(() => el.classList.add('visible'), 60 * i);
+  });
+}
+renderGrid();
+
+/* ===== FILTERS ===== */
+const CATS = ['Все', 'ИИ', 'Политика', 'Авто', 'Технологии', 'Стиль', 'Гейминг'];
+const filterList = document.getElementById('filterList');
+
+function renderFilters(active = 'Все') {
+  filterList.innerHTML = CATS.map(cat => {
+    const count = cat === 'Все' ? ARTICLES.length : ARTICLES.filter(a => a.category === cat).length;
+    return `<li class="filter-item ${cat === active ? 'active' : ''} flex items-center justify-between py-2 border-b border-white/5 last:border-0" data-cat="${cat}">
+      <span>${cat}</span>
+      <span class="text-[11px] ${cat === active ? 'text-neon' : 'text-gray-600'}">— ${String(count).padStart(2, '0')}</span>
+    </li>`;
+  }).join('');
+}
+renderFilters();
+
+// Delegate click: sidebar + nav
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-cat]');
+  if (!el) {
+    // nav links are # anchors — keep default smooth scroll
+    return;
+  }
+  const cat = el.dataset.cat;
+  renderFilters(cat);
+  renderGrid(cat);
+  document.querySelectorAll('#navLinks .nav-link, #mobileNav .nav-link').forEach(l =>
+    l.classList.toggle('active', l.dataset.cat === cat));
+  document.getElementById('mobileNav').classList.add('hidden');
+  e.preventDefault();
+});
+
+/* ===== NEWSLETTER ===== */
+document.getElementById('newsletterForm').addEventListener('submit', e => {
+  e.preventDefault();
+  const msg = document.getElementById('newsletterMsg');
+  const email = document.getElementById('emailInput');
+  msg.textContent = `[ OK ] Подтверждение отправлено на ${email.value}`;
+  msg.classList.remove('hidden');
+  email.value = '';
+  setTimeout(() => msg.classList.add('hidden'), 5000);
+});
+
+/* ===== MOBILE NAV ===== */
+const burger = document.getElementById('burger');
+burger.addEventListener('click', () => document.getElementById('mobileNav').classList.toggle('hidden'));
+
+/* ===== TICKER ===== */
+const tickerItems = [
+  'ИИ: ПРОЕКТИРОВАНИЕ ЧИПОВ ЗА 11 ДНЕЙ',
+  'БАТАРЕЯ: 1200 КМ НА ОДНОЙ ЗАРЯДКЕ',
+  'КВАНТОВЫЙ Q-DAY: БАНКИ МИГРИРУЮТ',
+  'АВТОПИЛОТ L4: ЗЕЛЁНЫЙ СВЕТ В ЕС',
+  'КИБЕРСПОРТ: 88 МЛН ЗРИТЕЛЕЙ',
+  'НЕЙРОИНТЕРФЕЙС: ВЫХОД ИЗ БЕТА'
+];
+const ticker = document.getElementById('ticker');
+const row = tickerItems.map(t => `<span class="pr-8">${t}</span><span class="text-neon pr-8">◆</span>`).join('');
+ticker.innerHTML = row + row; // duplicate for seamless loop
+
+/* ===== SCROLL FADE-IN ===== */
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); } });
+}, { threshold: 0.08 });
+document.querySelectorAll('.fade-item').forEach(el => observer.observe(el));
+</script>
+</body>
+</html>
